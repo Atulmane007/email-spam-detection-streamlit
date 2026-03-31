@@ -86,8 +86,11 @@ h1, h2, h3, h4, h5, h6, p, label{
 # Load ML Model
 # -------------------------
 
-model = pickle.load(open("model/spam_model.pkl", "rb"))
-vectorizer = pickle.load(open("model/vectorizer.pkl", "rb"))
+with open("model/spam_model.pkl", "rb") as f:
+    model = pickle.load(f)
+
+with open("model/vectorizer.pkl", "rb") as f:
+    vectorizer = pickle.load(f)
 
 st.title("📧 Email Spam Detection System")
 st.write("Machine Learning based system to detect spam messages.")
