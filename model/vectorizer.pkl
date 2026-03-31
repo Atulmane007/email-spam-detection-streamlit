@@ -1,1 +1,64 @@
-
+Item 1/1:
+TfidfVectorizer (attrs=23) {
+    input: (len=7)'content'
+    encoding: (len=5)'utf-8'
+    decode_error: (len=6)'strict'
+    strip_accents: None
+    preprocessor: None
+    tokenizer: None
+    analyzer: (len=4)'word'
+    lowercase: True
+    token_pattern: (len=13)'(?u)\b\w\w+\b'
+    stop_words: None
+    max_df: 1.0
+    min_df: 1
+    max_features: None
+    ngram_range: tuple (len=2) {
+        [0]: 1
+        [1]: 1
+    }
+    vocabulary: None
+    binary: False
+    dtype: type (attrs=2) {
+        as_integer_ratio:
+        is_integer:
+    }
+    norm: (len=2)'l2'
+    use_idf: True
+    smooth_idf: True
+    sublinear_tf: False
+    fixed_vocabulary_: False
+    vocabulary_: dict (len=8672) {
+        'go': 3550
+        'until': 8030
+        'jurong': 4350
+        'point': 5920
+        'crazy': 2327
+        'available': 1303
+        'only': 5537
+        'in': 4087
+        'bugis': 1751
+        'great': 3634
+        'world': 8489
+        'la': 4476
+        'buffet': 1749
+        'cine': 2048
+        'there': 7645
+        ... (8642 more items) ...
+        'pshew': 6134
+        'units': 8010
+        'accent': 875
+        '4years': 606
+        'dental': 2531
+        'nmde': 5366
+        'dump': 2801
+        'heap': 3792
+        'lowes': 4755
+        'salesman': 6590
+        '087187272008': 165
+        'now1': 5421
+        'pity': 5851
+        'suggestions': 7372
+        'bitching': 1546
+    }
+}
