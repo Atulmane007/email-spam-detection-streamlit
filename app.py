@@ -10,6 +10,10 @@ import plotly.graph_objects as go
 from sklearn.metrics import confusion_matrix
 import seaborn as sns
 
+# -------- NEW IMPORTS FOR MULTI-LANGUAGE SUPPORT --------
+from deep_translator import GoogleTranslator
+from langdetect import detect
+
 # -------------------------
 # Background Image
 # -------------------------
@@ -34,7 +38,49 @@ def set_bg(image_file):
 
 set_bg("background.jpg")
 
+st.markdown("""
+<style>
 
+/* Main content card */
+.block-container{
+    background: rgba(0, 0, 0, 0.88);
+    padding: 40px;
+    border-radius: 28px;
+    max-width: 760px;
+    margin-top: 70px;
+    margin-left: auto;
+    margin-right: auto;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+}
+
+.stApp{
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+textarea, .stTextArea textarea{
+    background-color: rgba(0,0,0,0.95) !important;
+    color: white !important;
+    border-radius: 16px;
+}
+
+.stFileUploader{
+    background-color: rgba(0,0,0,0.92);
+    padding: 12px;
+    border-radius: 16px;
+}
+
+.stButton button{
+    border-radius: 14px;
+}
+
+h1, h2, h3, h4, h5, h6, p, label{
+    color: white;
+}
+
+</style>
+""", unsafe_allow_html=True)
 
 # -------------------------
 # Load ML Model
@@ -57,6 +103,7 @@ st.sidebar.write("Model : Multinomial Naive Bayes")
 st.sidebar.write("Vectorizer : TF-IDF")
 st.sidebar.write("Dataset : SMS Spam Collection")
 st.sidebar.write("Accuracy ≈ 96%")
+st.sidebar.write("Language Support : English + Indian Languages")
 
 # -------------------------
 # Example Buttons
@@ -101,6 +148,30 @@ spam_keywords = [
 ]
 
 # -------------------------
+# LANGUAGE NAME MAP
+# -------------------------
+
+language_map = {
+    "en": "English",
+    "hi": "Hindi",
+    "mr": "Marathi",
+    "gu": "Gujarati",
+    "ta": "Tamil",
+    "te": "Telugu",
+    "kn": "Kannada",
+    "ml": "Malayalam",
+    "bn": "Bengali",
+    "pa": "Punjabi",
+    "ur": "Urdu",
+    "es": "Spanish",
+    "fr": "French",
+    "de": "German",
+    "zh-cn": "Chinese",
+    "ja": "Japanese",
+    "ko": "Korean"
+}
+
+# -------------------------
 # Prediction Section
 # -------------------------
 
@@ -110,13 +181,32 @@ if st.button("Check Email"):
         st.warning("Please enter an email message")
 
     else:
+
+        # -------- LANGUAGE DETECTION --------
+        try:
+            detected_language = detect(email_text)
+            language_name = language_map.get(detected_language, detected_language)
+            st.info(f"🌐 Detected Language: {language_name}")
+        except:
+            detected_language = "unknown"
+
+        # -------- TRANSLATE TO ENGLISH --------
+        try:
+            translated_text = GoogleTranslator(source='auto', target='en').translate(email_text)
+
+            if translated_text != email_text:
+                st.write("🔄 Translated Email (for ML Model):")
+                st.success(translated_text)
+        except:
+            translated_text = email_text
+
         if "http" in email_text or "www" in email_text:
             st.warning("⚠ This email contains a link (possible phishing attempt)")
 
         with st.spinner("Analyzing email..."):
             time.sleep(5)
 
-        vector = vectorizer.transform([email_text])
+        vector = vectorizer.transform([translated_text])
         prediction = model.predict(vector)
         prob = model.predict_proba(vector)
 
@@ -134,7 +224,6 @@ if st.button("Check Email"):
         st.progress(int(spam_prob))
         st.write("Ham Probability:", f"{ham_prob:.2f}%")
 
-        # Gauge Chart
         fig_gauge = go.Figure(go.Indicator(
             mode="gauge+number",
             value=spam_prob,
@@ -143,7 +232,6 @@ if st.button("Check Email"):
         ))
         st.plotly_chart(fig_gauge, use_container_width=True)
 
-        # Live Pie Chart
         st.subheader("🥧 Email Analysis Distribution")
         pie_fig = px.pie(
             names=["Spam", "Ham"],
@@ -152,7 +240,6 @@ if st.button("Check Email"):
         )
         st.plotly_chart(pie_fig, use_container_width=True)
 
-        # Email Length Insight
         st.subheader("📏 Email Length Insight")
         email_length = len(email_text)
         word_count = len(email_text.split())
@@ -161,7 +248,6 @@ if st.button("Check Email"):
         col1.metric("Characters", email_length)
         col2.metric("Words", word_count)
 
-        # Risk Level
         if spam_prob < 30:
             level = "🟢 Low"
         elif spam_prob < 60:
@@ -173,7 +259,6 @@ if st.button("Check Email"):
 
         st.write("Spam Risk Level :", level)
 
-        # Download Report
         report = f"""
 Email: {email_text}
 
@@ -184,7 +269,7 @@ Risk Level: {level}
         st.download_button("📥 Download Report", report, file_name="report.txt")
 
         st.session_state.pred = prediction[0]
-        st.session_state.email = email_text
+        st.session_state.email = translated_text
 
 # -------------------------
 # AI Explanation
@@ -245,7 +330,6 @@ Reasons:
         st.write("### 🟢 Normal Words")
         st.write(", ".join(safe_words[:20]))
 
-        # Word Type Distribution
         st.subheader("🧠 Word Type Distribution")
         spam_count = len(detected_spam_words)
         normal_count = len(safe_words)
@@ -257,17 +341,9 @@ Reasons:
         )
         st.plotly_chart(bar_fig, use_container_width=True)
 
-# -------------------------
-# CLEAN SECTION HEADER ADDED
-# -------------------------
-
 st.write("---")
 st.header("📊 Analysis & Model Insights")
 st.caption("Visual insights based on dataset and model performance")
-
-# -------------------------
-# Dataset Processing
-# -------------------------
 
 st.subheader("📈 Dataset Distribution")
 
@@ -281,7 +357,6 @@ try:
     counts = data['label'].value_counts()
     st.bar_chart(counts)
 
-    # Improved Confusion Matrix
     st.subheader("📊 Model Performance (Sample Data)")
 
     sample_data = data.sample(min(300, len(data)))
@@ -309,14 +384,6 @@ try:
 
     st.pyplot(fig_cm)
 
-    st.caption("""
-• Top-left: Correct Ham  
-• Top-right: False Spam  
-• Bottom-left: Missed Spam  
-• Bottom-right: Correct Spam  
-""")
-
-    # WordClouds (UNCHANGED)
     st.subheader("☁ Spam WordCloud")
 
     spam_words = " ".join(data[data['label'] == "spam"]['message'])
@@ -340,18 +407,25 @@ try:
 except Exception as e:
     st.error(f"Dataset error: {e}")
 
-
 st.write("---")
-
-
-# -------------------------
-# Future Scope
-# -------------------------
 
 st.header("⭐Future Improvements")
 
 st.write("""
-• Deep Learning models (LSTM / BERT) for better accuracy  
-• Multi-language spam detection  
-• Phishing URL detection using advanced security checks  
+• Integration of Email Encryption (AES / RSA) to secure sensitive messages  
+• End-to-End encrypted email scanning for secure spam detection  
+• Advanced phishing URL detection using security APIs  
+• Deep Learning models (LSTM / BERT) for improved spam classification accuracy  
+• Secure email authentication using SPF, DKIM, and DMARC protocols  
 """)
+
+st.write("---")
+
+st.markdown(
+"""
+<div style='text-align: center; color: gray; font-size: 14px;'>
+🚀 Built with Streamlit & Scikit-Learn | v2.0
+</div>
+""",
+unsafe_allow_html=True
+)
