@@ -1,1 +1,23 @@
+import pandas as pd
+import pickle
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.naive_bayes import MultinomialNB
 
+data = pd.read_csv("dataset/spam.csv", encoding="latin-1")
+
+data = data.rename(columns={"v1":"label","v2":"message"})
+data = data[["label","message"]]
+
+data["label"] = data["label"].map({"ham":0,"spam":1})
+
+vectorizer = TfidfVectorizer()
+X = vectorizer.fit_transform(data["message"])
+y = data["label"]
+
+model = MultinomialNB()
+model.fit(X,y)
+
+pickle.dump(model, open("spam_model.pkl","wb"))
+pickle.dump(vectorizer, open("vectorizer.pkl","wb"))
+
+print("Model files created!")
